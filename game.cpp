@@ -3880,6 +3880,10 @@ void game::draw_ter(int posx, int posy)
   posx = u.posx + u.view_offset_x;
  if (posy == -999)
   posy = u.posy + u.view_offset_y;
+
+ ter_view_x = posx;
+ ter_view_y = posy;
+
  m.build_map_cache(this);
  m.draw(this, w_terrain, point(posx, posy));
 
@@ -4961,9 +4965,13 @@ void game::draw_footsteps()
 
 void game::explosion(int x, int y, int power, int shrapnel, bool has_fire)
 {
- timespec ts;	// Timespec for the animation of the explosion
+
+//timespec no longer needed inside of this function, now part of renderer specific code
+// * staying in until shrapnel is moved out to bullet animation section
+ timespec ts;	// Timespec for the animation of the explosion and bullet
  ts.tv_sec = 0;
  ts.tv_nsec = EXPLOSION_SPEED;
+//*/
  int radius = sqrt(double(power / 4));
  int dam;
  std::string junk;
@@ -5026,7 +5034,10 @@ void game::explosion(int x, int y, int power, int shrapnel, bool has_fire)
    }
   }
  }
+
 // Draw the explosion
+  draw_explosion(x, y, radius, c_red);
+ /*
  for (int i = 1; i <= radius; i++) {
   mvwputch(w_terrain, y - i + VIEWY - u.posy - u.view_offset_y,
                       x - i + VIEWX - u.posx - u.view_offset_x, c_red, '/');
@@ -5049,7 +5060,7 @@ void game::explosion(int x, int y, int power, int shrapnel, bool has_fire)
   wrefresh(w_terrain);
   nanosleep(&ts, NULL);
  }
-
+ */
 // The rest of the function is shrapnel
  if (shrapnel <= 0)
   return;
@@ -5066,6 +5077,8 @@ void game::explosion(int x, int y, int power, int shrapnel, bool has_fire)
    traj = line_to(x, y, sx, sy, 0);
   dam = rng(20, 60);
   for (int j = 0; j < traj.size(); j++) {
+    draw_bullet(u, traj[j].x, traj[j].y, j, traj, '`', ts);
+  /*
    if (j > 0 && u_see(traj[j - 1].x, traj[j - 1].y))
     m.drawsq(w_terrain, u, traj[j - 1].x, traj[j - 1].y, false, true);
    if (u_see(traj[j].x, traj[j].y)) {
@@ -5074,6 +5087,7 @@ void game::explosion(int x, int y, int power, int shrapnel, bool has_fire)
     wrefresh(w_terrain);
     nanosleep(&ts, NULL);
    }
+   */
    tx = traj[j].x;
    ty = traj[j].y;
    if (mon_at(tx, ty) != -1) {
@@ -7831,10 +7845,11 @@ point game::look_around()
   }
   if (m.graffiti_at(lx, ly).contents)
    mvwprintw(w_look, ++off + 1, 1, _("Graffiti: %s"), m.graffiti_at(lx, ly).contents->c_str());
+  //mvwprintw(w_look, 5, 1, _("Maploc: <%d,%d>"), lx, ly);
   wrefresh(w_look);
   wrefresh(w_terrain);
 
-  DebugLog() << __FUNCTION__ << "calling get_input() \n";
+  DebugLog() << __FUNCTION__ << ": calling get_input() \n";
   input = get_input();
   if (!u_see(lx, ly))
    mvwputch(w_terrain, ly - u.posy + VIEWY, lx - u.posx + VIEWX, c_black, ' ');
@@ -10218,14 +10233,17 @@ void game::plmove(int x, int y)
   if (z[mondex].friendly == 0) {
    int udam = u.hit_mon(this, &z[mondex]);
    char sMonSym = '%';
-   nc_color cMonColor = z[mondex].type->color;
+   //nc_color cMonColor = z[mondex].type->color;
    if (z[mondex].hurt(udam))
     kill_mon(mondex, true);
    else
-    sMonSym = z[mondex].symbol();
-   hit_animation(x - u.posx + VIEWX - u.view_offset_x,
-                 y - u.posy + VIEWY - u.view_offset_y,
-                 red_background(cMonColor), sMonSym);
+    //sMonSym = z[mondex].symbol();
+   //hit_animation(x - u.posx + VIEWX - u.view_offset_x,
+   //              y - u.posy + VIEWY - u.view_offset_y,
+   //              red_background(cMonColor), sMonSym);
+   draw_hit_mon(x,
+                y,
+                z[mondex]);
    return;
   } else
    displace = true;

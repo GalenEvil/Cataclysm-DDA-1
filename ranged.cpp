@@ -295,6 +295,8 @@ int trange = rl_dist(p.posx, p.posy, tarx, tary);
       ty = trajectory[i].y;
 // Drawing the bullet uses player u, and not player p, because it's drawn
 // relative to YOUR position, which may not be the gunman's position.
+   draw_bullet(p, tx, ty, i, trajectory, effects->count("FLAME")? '#':'*', ts);
+   /*
    if (u_see(tx, ty)) {
     if (i > 0)
     {
@@ -310,7 +312,7 @@ int trange = rl_dist(p.posx, p.posy, tarx, tary);
     if (&p == &u)
      nanosleep(&ts, NULL);
    }
-
+   */
    if (dam <= 0 && !(effects->count("FLAME"))) { // Ran out of momentum.
     ammo_effects(this, tx, ty, *effects);
     if (is_bolt && !(effects->count("IGNITE")) &&
@@ -594,7 +596,7 @@ void game::throw_item(player &p, int tarx, int tary, item &thrown,
         m.add_item_or_charges(tx, ty, thrown);
     }
 }
-
+// TODO: Shunt redundant drawing code elsewhere
 std::vector<point> game::target(int &x, int &y, int lowx, int lowy, int hix,
                                 int hiy, std::vector <monster> t, int &target,
                                 item *relevent)
@@ -686,8 +688,9 @@ std::vector<point> game::target(int &x, int &y, int lowx, int lowy, int hix,
    for (int j = 1; j < getmaxx(w_target) - 2; j++)
     mvwputch(w_target, i, j, c_white, ' ');
   }
-  m.build_map_cache(this);
-  m.draw(this, w_terrain, center);
+  /* Start drawing w_terrain things -- possibly move out to centralized draw_terrain_window function as they all should be roughly similar*/
+  m.build_map_cache(this); // part of the SDLTILES drawing code
+  m.draw(this, w_terrain, center); // embedded in SDL drawing code
   // Draw the Monsters
   for (int i = 0; i < z.size(); i++) {
    if (u_see(&(z[i]))) {
@@ -721,7 +724,7 @@ std::vector<point> game::target(int &x, int &y, int lowx, int lowy, int hix,
        m.drawsq(w_terrain, u, ret[i].x, ret[i].y, true,true,center.x, center.y);
     }
    }
-
+    /* Print to target window, could maybe be moved up and out of the w_terrain drawing section? */
    if (!relevent) { // currently targetting vehicle to refill with fuel
     vehicle *veh = m.veh_at(x, y);
     if (veh)
@@ -744,6 +747,7 @@ std::vector<point> game::target(int &x, int &y, int lowx, int lowy, int hix,
   refresh();
   ch = input();
   get_direction(this, tarx, tary, ch);
+  /* More drawing to terrain */
   if (tarx != -2 && tary != -2 && ch != '.') {	// Direction character pressed
    int mondex = mon_at(x, y), npcdex = npc_at(x, y);
    if (mondex != -1 && u_see(&(z[mondex])))
@@ -1093,9 +1097,15 @@ void shoot_monster(game *g, player &p, monster &mon, int &dam, double goodhit, i
         }
         bool bMonDead = mon.hurt(adjusted_damage, dam);
         if( u_see_mon ) {
+            g->draw_hit_mon(mon.posx,
+                            mon.posy,
+                            mon,
+                            bMonDead);
+        /*
             hit_animation(mon.posx - g->u.posx + VIEWX - g->u.view_offset_x,
                      mon.posy - g->u.posy + VIEWY - g->u.view_offset_y,
                      red_background(mon.type->color), (bMonDead) ? '%' : mon.symbol());
+        */
         }
 
         if (bMonDead) {
