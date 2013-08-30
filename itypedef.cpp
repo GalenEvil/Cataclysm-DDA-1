@@ -16,6 +16,11 @@
 #define C_STORE  c_green
 #define C_DECOR  c_ltgreen
 
+/*
+// Special function for setting melee techniques
+#define TECH(id, t) itypes[id]->techniques = t
+*/
+
 // Special function for setting melee techniques
 #define TECH(id, t) itypes[id]->techniques = t
 

@@ -10,6 +10,9 @@
 #include <math.h>    //sqrt
 #include <algorithm> //std::min
 
+/*
+#define BATTERY_AMOUNT 4 // How much batteries increase your power
+*/
 #define BATTERY_AMOUNT 4 // How much batteries increase your power
 
 std::map<bionic_id, bionic_data*> bionics;
