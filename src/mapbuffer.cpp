@@ -6,6 +6,7 @@
 #include <fstream>
 #include "savegame.h"
 #include "picofunc.h"
+#include "map_streamer.h"
 
 #define dbg(x) dout((DebugLevel)(x),D_MAP) << __FILE__ << ":" << __LINE__ << ": "
 const int savegame_minver_map = 11;
@@ -30,6 +31,8 @@ void mapbuffer::reset(){
 
  submaps.clear();
  submap_list.clear();
+
+ map_streamer::MStream().dump_and_clear();
 }
 
 // game g's existance does not imply that it has been identified, started, or loaded.
@@ -431,6 +434,7 @@ void mapbuffer::unserialize(std::ifstream & fin) {
 
   submap_list.push_back(sm);
   submaps[ tripoint(locx, locy, locz) ] = sm;
+  map_streamer::MStream().add_submap_to_stream(tripoint(locx, locy, locz));
   num_loaded++;
  }
 }

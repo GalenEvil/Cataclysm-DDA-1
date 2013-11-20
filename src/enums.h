@@ -76,4 +76,9 @@ struct tripoint {
  ~tripoint(){}
 };
 
+inline bool operator <(const tripoint& a, const tripoint &b)
+{
+    return (a.x < b.x || (a.x == b.x && a.y < b.y) || (a.x == b.x && a.y == b.y && a.z < b.z));
+}
+
 #endif
